@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador de PlantUML Local</title>
+    <script src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        textarea { width: 100%; height: 150px; font-family: monospace; margin-bottom: 10px; }
+        #resultado { margin-top: 20px; border: 1px solid #ccc; padding: 10px; display: none; }
+        img { max-width: 100%; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h2>Gerador de Diagramas PlantUML</h2>
+    
+    <p>Cole seu código PlantUML abaixo:</p>
+    <textarea id="plantumlCode">
+@startuml
+actor Usuario
+boundary "Tela de Login" as UI
+participant "AuthService" as Auth
+
+Usuario -> UI : preenche credenciais
+UI -> Auth : envia dados
+Auth --> UI : token JWT
+UI --> Usuario : redireciona ao sistema
+@enduml
+    </textarea>
+
+    <br>
+    <button onclick="gerarDiagrama()">Gerar Imagem</button>
+
+    <div id="resultado">
+        <p><strong>Resultado:</strong></p>
+        <img id="diagramaImg" src="" alt="Diagrama Gerado">
+        <p><small id="urlTexto"></small></p>
+    </div>
+
+    <script>
+        function gerarDiagrama() {
+            // 1. Pega o texto do textarea
+            const texto = document.getElementById('plantumlCode').value;
+
+            // 2. Codifica o texto (a lib plantumlEncoder fica disponível globalmente)
+            const encoded = plantumlEncoder.encode(texto);
+
+            // 3. Monta a URL
+            const url = 'http://www.plantuml.com/plantuml/img/' + encoded;
+
+            // 4. Exibe na tela
+            const imgTag = document.getElementById('diagramaImg');
+            const container = document.getElementById('resultado');
+            const linkTexto = document.getElementById('urlTexto');
+
+            imgTag.src = url;
+            linkTexto.innerText = "URL da imagem: " + url;
+            container.style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>
