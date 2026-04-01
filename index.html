@@ -2,23 +2,42 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de PlantUML Local</title>
+    <title>Gerador de PlantUML Auto-Expansível</title>
     <script src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-        textarea { width: 100%; height: 150px; font-family: monospace; margin-bottom: 10px; }
-        #resultado { margin-top: 20px; border: 1px solid #ccc; padding: 10px; display: none; }
-        img { max-width: 100%; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* Estilo do Textarea */
+        textarea { 
+            width: 100%; 
+            min-height: 150px; 
+            font-family: 'Fira Code', monospace; 
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none; /* Desativa o redimensionamento manual pelo usuário */
+            overflow: hidden; /* Esconde a barra de rolagem */
+            box-sizing: border-box;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        button { background-color: #28a745; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        #resultado { margin-top: 30px; text-align: center; display: none; }
+        img { max-width: 100%; border: 1px solid #eee; margin-top: 10px; }
+        code { word-break: break-all; font-size: 11px; color: #666; }
     </style>
 </head>
 <body>
 
-    <h2>Gerador de Diagramas PlantUML</h2>
-    
-    <p>Cole seu código PlantUML abaixo:</p>
-    <textarea id="plantumlCode">
+    <div class="container">
+        <h2>Gerador PlantUML</h2>
+        <p>O campo abaixo expande automaticamente conforme você digita:</p>
+        
+        <textarea id="plantumlCode" oninput="ajustarAltura(this)" placeholder="Comece a digitar seu código @startuml...">
 @startuml
 actor Usuario
 boundary "Tela de Login" as UI
@@ -28,38 +47,44 @@ Usuario -> UI : preenche credenciais
 UI -> Auth : envia dados
 Auth --> UI : token JWT
 UI --> Usuario : redireciona ao sistema
-@enduml
-    </textarea>
+@enduml</textarea>
 
-    <br>
-    <button onclick="gerarDiagrama()">Gerar Imagem</button>
+        <button onclick="gerarDiagrama()">Gerar Diagrama</button>
 
-    <div id="resultado">
-        <p><strong>Resultado:</strong></p>
-        <img id="diagramaImg" src="" alt="Diagrama Gerado">
-        <p><small id="urlTexto"></small></p>
+        <div id="resultado">
+            <hr>
+            <p><strong>Diagrama Gerado:</strong></p>
+            <img id="diagramaImg" src="" alt="Diagrama">
+            <br><br>
+            <code>URL: <span id="urlTexto"></span></code>
+        </div>
     </div>
 
     <script>
+        // Função para auto-ajustar a altura
+        function ajustarAltura(elemento) {
+            elemento.style.height = "auto"; // Reseta para calcular o novo scrollHeight
+            elemento.style.height = (elemento.scrollHeight) + "px"; // Aplica a altura do conteúdo
+        }
+
         function gerarDiagrama() {
-            // 1. Pega o texto do textarea
             const texto = document.getElementById('plantumlCode').value;
-
-            // 2. Codifica o texto (a lib plantumlEncoder fica disponível globalmente)
             const encoded = plantumlEncoder.encode(texto);
-
-            // 3. Monta a URL
             const url = 'http://www.plantuml.com/plantuml/img/' + encoded;
 
-            // 4. Exibe na tela
             const imgTag = document.getElementById('diagramaImg');
             const container = document.getElementById('resultado');
             const linkTexto = document.getElementById('urlTexto');
 
             imgTag.src = url;
-            linkTexto.innerText = "URL da imagem: " + url;
+            linkTexto.innerText = url;
             container.style.display = 'block';
         }
+
+        // Chama uma vez ao carregar para ajustar o texto inicial
+        window.onload = function() {
+            ajustarAltura(document.getElementById('plantumlCode'));
+        };
     </script>
 
 </body>
