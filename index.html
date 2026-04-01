@@ -2,90 +2,111 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerador de PlantUML Auto-Expansível</title>
+    <title>Gerador PlantUML com Status</title>
     <script src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; padding: 30px; background-color: #f0f2f5; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* Estilo do Textarea */
         textarea { 
-            width: 100%; 
-            min-height: 150px; 
-            font-family: 'Fira Code', monospace; 
-            font-size: 14px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            resize: none; /* Desativa o redimensionamento manual pelo usuário */
-            overflow: hidden; /* Esconde a barra de rolagem */
-            box-sizing: border-box;
-            display: block;
-            margin-bottom: 15px;
+            width: 100%; min-height: 150px; font-family: monospace; padding: 12px;
+            border: 1px solid #ccc; border-radius: 8px; resize: none; overflow: hidden;
+            box-sizing: border-box; margin-bottom: 15px; outline: none;
         }
 
-        button { background-color: #28a745; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        button:hover { background-color: #218838; }
-        #resultado { margin-top: 30px; text-align: center; display: none; }
-        img { max-width: 100%; border: 1px solid #eee; margin-top: 10px; }
-        code { word-break: break-all; font-size: 11px; color: #666; }
+        .controls { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+
+        button { 
+            background-color: #007bff; color: white; border: none; padding: 12px 25px; 
+            cursor: pointer; border-radius: 6px; font-weight: 600; transition: 0.3s;
+        }
+        button:hover { background-color: #0056b3; }
+
+        /* Estilos dos Ícones de Status */
+        .status-container { display: flex; align-items: center; font-size: 14px; font-weight: bold; }
+        
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #3498db;
+            border-radius: 50%; width: 20px; height: 20px;
+            animation: spin 1s linear infinite; display: none; margin-right: 8px;
+        }
+
+        .success-icon { color: #28a745; display: none; align-items: center; }
+        .success-icon::before { content: '✔'; margin-right: 8px; font-size: 18px; }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #resultado { margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }
+        img { max-width: 100%; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Gerador PlantUML</h2>
-        <p>O campo abaixo expande automaticamente conforme você digita:</p>
-        
-        <textarea id="plantumlCode" oninput="ajustarAltura(this)" placeholder="Comece a digitar seu código @startuml...">
+<div class="container">
+    <h2>PlantUML Designer</h2>
+    
+    <textarea id="plantumlCode" oninput="ajustarAltura(this)">
 @startuml
-actor Usuario
-boundary "Tela de Login" as UI
-participant "AuthService" as Auth
-
-Usuario -> UI : preenche credenciais
-UI -> Auth : envia dados
-Auth --> UI : token JWT
-UI --> Usuario : redireciona ao sistema
+skinparam classAttributeIconSize 0
+entity "Usuário" as U {
+  # id_usuario
+  nome
+}
 @enduml</textarea>
 
+    <div class="controls">
         <button onclick="gerarDiagrama()">Gerar Diagrama</button>
-
-        <div id="resultado">
-            <hr>
-            <p><strong>Diagrama Gerado:</strong></p>
-            <img id="diagramaImg" src="" alt="Diagrama">
-            <br><br>
-            <code>URL: <span id="urlTexto"></span></code>
+        
+        <div class="status-container">
+            <div id="loading" class="loader"></div>
+            <div id="success" class="success-icon">Concluído!</div>
         </div>
     </div>
 
-    <script>
-        // Função para auto-ajustar a altura
-        function ajustarAltura(elemento) {
-            elemento.style.height = "auto"; // Reseta para calcular o novo scrollHeight
-            elemento.style.height = (elemento.scrollHeight) + "px"; // Aplica a altura do conteúdo
-        }
+    <div id="resultado">
+        <img id="diagramaImg" src="" style="display:none;">
+    </div>
+</div>
 
-        function gerarDiagrama() {
-            const texto = document.getElementById('plantumlCode').value;
-            const encoded = plantumlEncoder.encode(texto);
-            const url = 'http://www.plantuml.com/plantuml/img/' + encoded;
+<script>
+    function ajustarAltura(elemento) {
+        elemento.style.height = "auto";
+        elemento.style.height = (elemento.scrollHeight) + "px";
+    }
 
-            const imgTag = document.getElementById('diagramaImg');
-            const container = document.getElementById('resultado');
-            const linkTexto = document.getElementById('urlTexto');
+    function gerarDiagrama() {
+        const texto = document.getElementById('plantumlCode').value;
+        const loader = document.getElementById('loading');
+        const success = document.getElementById('success');
+        const img = document.getElementById('diagramaImg');
 
-            imgTag.src = url;
-            linkTexto.innerText = url;
-            container.style.display = 'block';
-        }
+        // 1. Mostrar loading e esconder sucesso anterior
+        loader.style.display = 'block';
+        success.style.display = 'none';
 
-        // Chama uma vez ao carregar para ajustar o texto inicial
-        window.onload = function() {
-            ajustarAltura(document.getElementById('plantumlCode'));
+        // 2. Codificar e definir a nova URL
+        const encoded = plantumlEncoder.encode(texto);
+        const url = 'http://www.plantuml.com/plantuml/img/' + encoded;
+
+        // 3. O evento 'onload' dispara quando a imagem termina de baixar
+        img.onload = function() {
+            loader.style.display = 'none';   // Esconde loading
+            success.style.display = 'flex'; // Mostra OK
+            img.style.display = 'inline-block'; // Mostra a imagem
         };
-    </script>
+
+        // Trata erro caso o servidor esteja fora ou o código esteja errado
+        img.onerror = function() {
+            loader.style.display = 'none';
+            alert("Erro ao carregar o diagrama. Verifique o código PlantUML.");
+        };
+
+        img.src = url;
+    }
+
+    // Ajuste inicial
+    window.onload = () => ajustarAltura(document.getElementById('plantumlCode'));
+</script>
 
 </body>
 </html>
